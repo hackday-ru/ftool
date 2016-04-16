@@ -1,0 +1,5 @@
+- name: nginx-blabla
+  host: all
+  tasks:
+        - shell: echo "hi!"
+          when: apache_port.stdout != ''

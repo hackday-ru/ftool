@@ -1,9 +1,9 @@
 # strategy: apache exist
-- name: nginx-apache-brand-new
+- name: nginx-brand-new
   host: all
   tasks:
  	- shell: echo "hi!"
-	- 
+#	- include: check-apache-tls.yml
  	  when: apache_port.stdout != ''
 
 
@@ -17,6 +17,7 @@
   host: all
   tasks:
 	- include: nginx-tls-install.yml
+	- shell: echo "hi!" 
 	- shell: echo "hi!"
  	  when: apache_port.stdout == ''
 	
