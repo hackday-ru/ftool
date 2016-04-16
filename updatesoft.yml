@@ -10,3 +10,11 @@
 
     - apt: name=nginx
       when: frontend_name.stdout.find('apache') != -1
+
+- name: big install
+  hosts: all
+  tasks:
+    - apt: name=git
+    - apt: name=software-properties-common
+    - apt: name=python-software-properties
+
