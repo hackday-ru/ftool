@@ -1,0 +1,10 @@
+---
+- name: get variables
+  hosts: all
+  tasks:
+    - shell: netstat -nlp | grep -E "0.0.0.0|::" | grep ":80 " | awk '{print $7}' | awk -F/ '{print $2}'
+      register: frontend_name
+
+    - shell: netstat -nlp|awk '/apache/ {print $4}'|awk -F":" '{print $NF}'
+      register: apache_port
+      when: frontend_name.stdout.find('apache') == -1

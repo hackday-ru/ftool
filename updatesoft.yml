@@ -1,0 +1,14 @@
+---
+- name: update soft
+  hosts: all
+  tasks:
+    - apt: upgrade=safe update_cache=yes
+
+    - apt_key: url=http://nginx.org/keys/nginx_signing.key state=present
+
+    - apt_repository: repo='deb http://nginx.org/packages/ubuntu/ wily nginx' state=present
+
+    - shell: touch /root/nginx
+      when: frontend_name.stdout.find('apache') != -1
+
+    - apt: name=nginx update_cache=yes

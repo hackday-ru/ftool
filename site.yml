@@ -1,0 +1,5 @@
+---
+- include: variables.yml
+- include: updatesoft.yml
+- include: apache.yml
+  when: apache_port.stdout != ''
