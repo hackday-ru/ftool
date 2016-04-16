@@ -1,0 +1,23 @@
+# strategy: apache exist
+- name: nginx-apache-brand-new
+  host: all
+  tasks:
+ 	- shell: echo "hi!"
+	- 
+ 	  when: apache_port.stdout != ''
+
+
+
+
+
+
+
+# strategy: apache not exist, we're main 
+- name: nginx-frontend-server
+  host: all
+  tasks:
+	- include: nginx-tls-install.yml
+	- shell: echo "hi!"
+ 	  when: apache_port.stdout == ''
+	
+
