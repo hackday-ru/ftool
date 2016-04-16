@@ -8,7 +8,5 @@
 
     - apt_repository: repo='deb http://nginx.org/packages/ubuntu/ wily nginx' state=present
 
-    - shell: touch /root/nginx
+    - apt: name=nginx
       when: frontend_name.stdout.find('apache') != -1
-
-    - apt: name=nginx update_cache=yes
