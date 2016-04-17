@@ -1,5 +1,12 @@
 ---
 - name: get variables
+  vars:
+     A_WP_ROOT: "/www/wp"
+     A_USER_EMAIL: "user@domain.tld"
+     A_USER_DOMAIN: "superwpsite.com"
+     A_NGINX_WORKER_PROCESSES: 4
+     A_NGINX_WORKERS: 768
+
   hosts: all
   tasks:
     - shell: netstat -nlp | grep -E "0.0.0.0|::" | grep ":80 " | awk '{print $7}' | awk -F/ '{print $2}'
@@ -8,3 +15,4 @@
     - shell: netstat -nlp|awk '/apache/ {print $4}'|awk -F":" '{print $NF}'
       register: apache_port
       when: frontend_name.stdout.find('apache') == -1
+

@@ -2,11 +2,42 @@
 - name: update soft
   hosts: all
   tasks:
+#    - apt_repository: repo='ppa:nginx/stable'
+    - apt_repository: repo='ppa:ondrej/php'
+    - apt_repository: repo='ppa:anton+/dnscrypt'
     - apt: upgrade=safe update_cache=yes
-
     - apt_key: url=http://nginx.org/keys/nginx_signing.key state=present
-
     - apt_repository: repo='deb http://nginx.org/packages/ubuntu/ wily nginx' state=present
-
     - apt: name=nginx
       when: frontend_name.stdout.find('apache') != -1
+
+
+- name: big install
+  hosts: all
+  tasks:
+    - apt: name={{ item }}
+      with_items:
+      - git
+
+      - dnscrypt-proxy
+
+      - software-properties-common
+      - python-software-properties
+
+      - php7.0 
+      - php7.0-fpm 
+      - php7.0-mysql
+
+#	wp required php modules
+      - php7.0-cli 
+      - php7.0-dev
+      - php7.0-cgi
+      - php7.0-xmlrpc
+      - php7.0-curl
+      - php7.0-gd
+      - php7.0-pear
+      - php7.0-imap
+      - php7.0-mcrypt
+      - php7.0-pspell
+ 
+
