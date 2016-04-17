@@ -1,15 +1,19 @@
-# strategy: apache exist
+# strategy: apache exist; nginx not exist
 - name: nginx-brand-new
   host: all
   tasks:
- 	- shell: echo "hi!"
 #	- include: check-apache-tls.yml
  	  when: apache_port.stdout != ''
-
-
-
-
-
+# generate secure dhparam
+	- shell: "openssl dhparam -out /etc/nginx/dhparam.pem 2048"
+	- shell: "rm -f /etc/nginx/sites-available/*"
+	- shell: "rm -f /etc/nginx/sites-enabled/*"
+	- copy: src="templates/nginx.conf.template" dest="/etc/nginx/nginx.conf"
+	- copy: src="templates/nginx.default.http" dest="/etc/nginx/sites-available/default.http"
+	- copy: src="templates/nginx.reverseproxy.default.https" dest="/etc/nginx/sites-available/default.https"
+	- file: src=/etc/nginx/sites-available/default.http dest=/etc/nginx/sites-enabled/default.http state=link
+	- file: src=/etc/nginx/sites-available/default.https dest=/etc/nginx/sites-enabled/default.https state=link
+	- service: name=nginx state=restarted
 
 
 # strategy: apache not exist, we're main 
@@ -17,6 +21,5 @@
   host: all
   tasks:
 	- include: nginx-tls-install.yml
-	- shell: echo "hi!" 
-	- shell: echo "hi!"
  	  when: apache_port.stdout == ''
+

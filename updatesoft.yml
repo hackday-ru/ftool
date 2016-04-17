@@ -4,6 +4,7 @@
   tasks:
 #    - apt_repository: repo='ppa:nginx/stable'
     - apt_repository: repo='ppa:ondrej/php'
+    - apt_repository: repo='ppa:anton+/dnscrypt'
     - apt: upgrade=safe update_cache=yes
     - apt_key: url=http://nginx.org/keys/nginx_signing.key state=present
     - apt_repository: repo='deb http://nginx.org/packages/ubuntu/ wily nginx' state=present
@@ -17,8 +18,12 @@
     - apt: name={{ item }}
       with_items:
       - git
+
+      - dnscrypt-proxy
+
       - software-properties-common
       - python-software-properties
+
       - php7.0 
       - php7.0-fpm 
       - php7.0-mysql
