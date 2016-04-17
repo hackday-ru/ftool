@@ -1,6 +1,35 @@
 ---
-- name: config apache
+- name: Config apache
   hosts: all
   tasks:
-    - shell: netstat -nlp | grep -E "0.0.0.0|::" | grep ":80 " | awk '{print $7}' | awk -F/ '{print $2}'
-      register: frontend_name
+#    - name: Apache2 listen on port 8080
+#      lineinfile: dest=/etc/apache2/ports.conf regexp="^Listen 80" line="Listen 8080" state=present
+#      when: frontend_name.stdout.find('apache') != -1
+
+#    - name: Apache2 listen on port 8443
+#      lineinfile: dest=/etc/apache2/ports.conf regexp="(Listen).*(443)" line="Listen 8443" state=present
+#      when: frontend_name.stdout.find('apache') != -1
+
+    - name: Apache2 listen on port 8080
+      shell: echo "Listen 8080" > /etc/apache2/ports.conf
+      when: frontend_name.stdout.find('apache') != -1
+
+    - name: Apache2 virtualhost on port 8080
+      lineinfile: dest=/etc/apache2/sites-available/000-default.conf regexp="^<VirtualHost \*:80>" line="<VirtualHost *:8080>" state=present
+      when: frontend_name.stdout.find('apache') != -1
+
+    - name: Get worker size
+      shell: ps -auxww | grep apache | grep -v root |  awk '{print $6}' | sort -n | tail -n1
+      register: worker_size
+
+    - name: Get max workers
+      shell: echo {{ (((ansible_memtotal_mb - 264) * 0.9) / (worker_size.stdout|int / 1024))|int }}
+      register: max_workers
+        
+    - name: Set max workers  
+      lineinfile: dest=/etc/apache2/mods-available/mpm_prefork.conf regexp="MaxRequestWorkers.*([0-9])\w+" line="MaxRequestWorkers {{ max_workers.stdout }}" state=present
+
+    - name: Restart apache2
+      service: name=apache2 state=restarted
+    
+    
