@@ -1,5 +1,5 @@
 user www-data;
-worker_processes {{A_NGINX_WORKER_PROCESSES}};
+worker_processes {{ A_NGINX_WORKER_PROCESSES }};
 
 timer_resolution 100ms;
 worker_rlimit_nofile 8192;
@@ -10,7 +10,7 @@ worker_priority -5;
 pid /run/nginx.pid;
 
 events {
-        worker_connections {{A_NGINX_WORKERS}};
+        worker_connections {{ A_NGINX_WORKERS }};
         multi_accept on;
 }
 

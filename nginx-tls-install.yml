@@ -1,5 +1,31 @@
-- name: nginx-blabla
+- name: tls-le dirs
+  host: all
+  file: path=/tls state=directory owner=www-data group=www-data mode=0700
+  file: path=/tls/le state=directory owner=www-data group=www-date mode=0700
+  file: path=/tls/certs state=directory owner=www-data group=www-data mode=0700
+
+- name: tls-le install
   host: all
   tasks:
-        - shell: echo "hi!"
-          when: apache_port.stdout != ''
+	- git:    repo=git@github.com/letsencrypt/letsencrypt
+		dest=/tls/le
+           	accept_hostkey=yes
+           	force=yes
+           	recursive=yes
+	- shell: "service nginx stop"
+        - shell: "cd /tls/le/letsencrypt"
+	- shell: "./letsencrypt-auto --renew-by-default --standalone --email '{{ A_USER_EMAIL }}' --text --agree-tos -d {{ A_USER_DOMAIN }} auth >> /var/log/le.log 2>&1"
+# renew certificate every 1st of month
+        - cron: name="cert renew" day="1"  job="/tls/le/letsencrypt/letsencrypt-auto renew"
+# stop or killall frontend and backend first
+# cd /tls/le/letsencrypt && ./letsencrypt-auto --renew-by-default --standalone --email '{{A_USER_EMAIL}}' --text --agree-tos -d {{A_USER_DOMAIN}} auth >> /var/log/le.log 2>&1
+# add to cron (every 1 day of month): cd /tls/le/letsencrypt && ./letsencrypt-auto renew >> /var/log/le.log 2>1&1
+# now is tls is enabled
+
+- name: tls-change-config
+  host: all
+  tasks:
+#	change settings for tls from template
+
+	- shell "service nginx start"
+

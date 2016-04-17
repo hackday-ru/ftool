@@ -20,5 +20,3 @@
 	- shell: echo "hi!" 
 	- shell: echo "hi!"
  	  when: apache_port.stdout == ''
-	
-
