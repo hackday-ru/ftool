@@ -14,5 +14,4 @@
 
     - shell: netstat -nlp|awk '/apache/ {print $4}'|awk -F":" '{print $NF}'
       register: apache_port
-      when: frontend_name.stdout.find('apache') == -1
 
