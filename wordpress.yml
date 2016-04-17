@@ -1,0 +1,74 @@
+---
+- name: configure wp
+  hosts: all
+  vars:
+    deactivate_plugins: "update wp_options set option_value='a:0:{}' where option_name='active_plugins';"
+    activate_plugins: "update wp_options set option_value='' where option_name='active_plugins';"
+  tasks:
+    - shell: nginx -T 2>&1| awk '/root/ {print $2}'|awk -F";" '/\// {print $1}'
+      register: wp_root_dir
+
+    - file: path={{ wp_root_dir.stdout }}.bak state=directory
+
+    - shell: cp -r {{ wp_root_dir.stdout }}/* {{ wp_root_dir.stdout }}.bak
+
+    - shell: awk '/DB_NAME/ {print $2}' {{ wp_root_dir.stdout }}/wp-config.php|awk -F"'" '{print $2}'
+      register: sql_name
+
+    - shell: awk '/DB_USER/ {print $2}' {{ wp_root_dir.stdout }}/wp-config.php|awk -F"'" '{print $2}'
+      register: sql_user
+
+    - shell: awk '/DB_PASSWORD/ {print $2}' {{ wp_root_dir.stdout }}/wp-config.php|awk -F"'" '{print $2}'
+      register: sql_passwd
+
+    - shell: awk '/DB_HOST/ {print $2}' {{ wp_root_dir.stdout }}/wp-config.php|awk -F"'" '{print $2}'
+      register: sql_host
+
+    - shell: mysqldump -u {{ sql_user.stdout }} -p{{ sql_passwd.stdout }} -h {{ sql_host.stdout }} {{ sql_name.stdout }} > {{ wp_root_dir.stdout }}.bak/olddump.sql
+
+    - shell: mysql -u {{ sql_user.stdout }} -p{{ sql_passwd.stdout }} -h {{ sql_host.stdout }} {{ sql_name.stdout }} -e "{{ deactivate_plugins }}"
+
+    - shell: ls {{ wp_root_dir.stdout }}/wp-*.php
+      register: wp_files_to_delete
+
+    - file: name={{item}} state=absent
+      with_items: wp_files_to_delete.stdout_lines
+
+    - file: name={{ wp_root_dir.stdout }}/wp-includes state=absent
+
+    - file: name={{ wp_root_dir.stdout }}/wp-admin state=absent
+
+    - file: name={{ item }} state=absent
+      with_items:
+        - wp.php
+        - xmlrpc.php
+
+    - file: name={{ wp_root_dir.stdout }}/wp-content/cache state=absent
+
+    - file: name={{ wp_root_dir.stdout }}/wp-content/plugins/widgets state=absent
+
+    - unarchive: src=https://wordpress.org/latest.zip dest=~ copy=no
+
+    - shell: cp -rf ~/wordpress/* {{ wp_root_dir.stdout }}
+
+    - shell: cp {{ wp_root_dir.stdout }}.bak/wp-config.php {{ wp_root_dir.stdout }}
+
+    - get_url: url=https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar dest=/usr/local/bin/wp mode=500
+
+    - shell: wp core update-db --allow-root && wp plugin update --all --allow-root
+      args:
+        chdir: "{{ wp_root_dir.stdout }}"
+
+    - shell: mysql -u {{ sql_user.stdout }} -p{{ sql_passwd.stdout }} -h {{ sql_host.stdout }} {{ sql_name.stdout }} -e "{{ activate_plugins }}"
+
+    - shell: wp plugin list --format=csv --allow-root
+      args:
+        chdir: "{{ wp_root_dir.stdout }}"
+      register: wp_list_plugins
+
+    - shell: wp plugin install wp-super-cache --allow-root && wp plugin activate --all --allow-root
+      args:
+        chdir: "{{ wp_root_dir.stdout }}"
+      when: wp_list_plugins.stdout.find('cache') == -1
+
+    - file: path={{ wp_root_dir.stdout }} owner=www-data group=www-data recurse=yes
