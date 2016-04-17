@@ -3,3 +3,4 @@
 - include: updatesoft.yml
 - include: apache.yml
   when: apache_port.stdout != ''
+- include: wordpress.yml
